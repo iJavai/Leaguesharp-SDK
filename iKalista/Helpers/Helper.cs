@@ -15,16 +15,15 @@
 //             You should have received a copy of the GNU General Public License
 //             along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   The Helper class
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace iKalista.Helpers
 {
     using System.Linq;
 
     using LeagueSharp;
     using LeagueSharp.SDK.Core;
+    using LeagueSharp.SDK.Core.Extensions;
     using LeagueSharp.SDK.Core.Wrappers;
 
     /// <summary>
@@ -35,11 +34,13 @@ namespace iKalista.Helpers
         #region Public Methods and Operators
 
         /// <summary>
-        ///     Gets the targets current health including shield damage
+        /// Gets the targets current health including shield damage
         /// </summary>
-        /// <param name="target"> The Target </param>
+        /// <param name="target">
+        /// The Target 
+        /// </param>
         /// <returns>
-        ///     <see cref="float" />
+        /// The <see cref="float"/>.
         /// </returns>
         public static float GetHealthWithShield(this Obj_AI_Hero target)
         {
@@ -58,13 +59,13 @@ namespace iKalista.Helpers
         }
 
         /// <summary>
-        ///     Gets the current <see cref="BuffInstance" /> Count of Expunge
+        /// Gets the current <see cref="BuffInstance"/> Count of Expunge
         /// </summary>
         /// <param name="target">
-        ///     The Target
+        /// The Target
         /// </param>
         /// <returns>
-        ///     The <see cref="int" />.
+        /// The <see cref="int"/>.
         /// </returns>
         public static int GetRendBuffCount(this Obj_AI_Base target)
         {
@@ -72,13 +73,13 @@ namespace iKalista.Helpers
         }
 
         /// <summary>
-        ///     Gets the Rend Damage for each target
+        /// Gets the Rend Damage for each target
         /// </summary>
         /// <param name="target">
-        ///     The Target
+        /// The Target
         /// </param>
         /// <returns>
-        ///     The <see cref="float" />.
+        /// The <see cref="float"/>.
         /// </returns>
         public static float GetRendDamage(Obj_AI_Base target)
         {
@@ -89,7 +90,7 @@ namespace iKalista.Helpers
             }
 
             // The base damage of E
-            var baseDamage = GetBaseDamage(target); // TODO replace with common damage :S
+            var baseDamage = Damages.GetRendDamage(target); // TODO replace with common damage :S
 
             // With exhaust players damage is reduced by 40%
             if (ObjectManager.Player.HasBuff("summonerexhaust"))
@@ -119,27 +120,41 @@ namespace iKalista.Helpers
         }
 
         /// <summary>
-        ///     Checks if a target has the Expunge <see cref="BuffInstance" />
+        /// Gets the rend buff
         /// </summary>
         /// <param name="target">
-        ///     The Target
+        /// The Target
         /// </param>
         /// <returns>
-        ///     The <see cref="bool" />.
+        /// The <see cref="BuffInstance"/>.
         /// </returns>
-        public static bool HasRendBuff(this Obj_AI_Base target)
+        public static BuffInstance GetRendBuff(this Obj_AI_Base target)
         {
-            return target.HasBuff("kalistaexpungemarker");
+            return target.Buffs.Find(b => b.Caster.IsMe && b.IsValid && b.DisplayName == "KalistaExpungeMarker");
         }
 
         /// <summary>
-        ///     Checks if the given target has an invulnerable buff
+        /// Checks if a target has the Expunge <see cref="BuffInstance"/>
         /// </summary>
         /// <param name="target">
-        ///     The Target
+        /// The Target
         /// </param>
         /// <returns>
-        ///     The <see cref="bool" />.
+        /// The <see cref="bool"/>.
+        /// </returns>
+        public static bool HasRendBuff(this Obj_AI_Base target)
+        {
+            return target.GetRendBuff() != null;
+        }
+
+        /// <summary>
+        /// Checks if the given target has an invulnerable buff
+        /// </summary>
+        /// <param name="target">
+        /// The Target
+        /// </param>
+        /// <returns>
+        /// The <see cref="bool"/>.
         /// </returns>
         public static bool HasUndyingBuff(this Obj_AI_Hero target)
         {
@@ -181,13 +196,13 @@ namespace iKalista.Helpers
         }
 
         /// <summary>
-        ///     Checks if the given target is killable
+        /// Checks if the given target is killable
         /// </summary>
         /// <param name="target">
-        ///     The Target
+        /// The Target
         /// </param>
         /// <returns>
-        ///     The <see cref="bool" />.
+        /// The <see cref="bool"/>.
         /// </returns>
         public static bool IsRendKillable(this Obj_AI_Base target)
         {
@@ -202,13 +217,13 @@ namespace iKalista.Helpers
         #region Methods
 
         /// <summary>
-        ///     Gets the Base Damage
+        /// Gets the Base Damage
         /// </summary>
         /// <param name="target">
-        ///     The target
+        /// The target
         /// </param>
         /// <returns>
-        ///     <see cref="float"/>
+        /// The <see cref="float"/>.
         /// </returns>
         private static float GetBaseDamage(Obj_AI_Base target)
         {

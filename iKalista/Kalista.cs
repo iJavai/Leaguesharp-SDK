@@ -19,6 +19,7 @@
 //   The champion class
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace iKalista
 {
     using System;
@@ -92,6 +93,32 @@ namespace iKalista
         #endregion
 
         #region Methods
+
+        /// <summary>
+        ///     Auto Harass Function
+        /// </summary>
+        private void AutoHarass()
+        {
+            if (!this.Menu["com.kalista.harass"]["autoHarass"].GetValue<MenuBool>().Value
+                || !SpellManager.Spell[SpellSlot.E].IsReady())
+            {
+                return;
+            }
+
+            var target =
+                ObjectManager.Get<Obj_AI_Hero>()
+                    .Where(x => x.IsEnemy && x.HasRendBuff())
+                    .MinOrDefault(x => x.Distance(ObjectManager.Player));
+            var killableMinion =
+                ObjectManager.Get<Obj_AI_Base>()
+                    .Any(x => x.IsEnemy && SpellManager.Spell[SpellSlot.E].IsInRange(x) && x.IsRendKillable());
+            if (target != null
+                && target.Distance(ObjectManager.Player) < Math.Pow(SpellManager.Spell[SpellSlot.E].Range + 200, 2)
+                && killableMinion)
+            {
+                SpellManager.Spell[SpellSlot.E].Cast();
+            }
+        }
 
         /// <summary>
         ///     Sends sentinels to either dragon or baron pit!
@@ -193,7 +220,10 @@ namespace iKalista
                 && this.Menu["com.kalista.combo"]["useE"].GetValue<MenuBool>().Value)
             {
                 var rendTarget =
-                    ObjectManager.Get<Obj_AI_Hero>().Where(x => x.IsEnemy && x.IsValidTarget(SpellManager.Spell[SpellSlot.E].Range) && x.HasRendBuff()
+                    ObjectManager.Get<Obj_AI_Hero>()
+                        .Where(
+                            x =>
+                            x.IsEnemy && x.IsValidTarget(SpellManager.Spell[SpellSlot.E].Range) && x.HasRendBuff()
                             && !x.HasBuffOfType(BuffType.Invulnerability) && !x.HasBuffOfType(BuffType.SpellShield))
                         .OrderByDescending(Helper.GetRendDamage)
                         .FirstOrDefault();
@@ -214,7 +244,8 @@ namespace iKalista
                     SpellManager.Spell[SpellSlot.E].Cast();
                 }
 
-                if (rendTarget.IsRendKillable() || damage >= this.Menu["com.kalista.combo"]["minStacks"].GetValue<MenuSlider>().Value)
+                if (rendTarget.IsRendKillable()
+                    || damage >= this.Menu["com.kalista.combo"]["minStacks"].GetValue<MenuSlider>().Value)
                 {
                     SpellManager.Spell[SpellSlot.E].Cast();
                 }
@@ -226,7 +257,6 @@ namespace iKalista
         /// </summary>
         private void OnHarass()
         {
-
         }
 
         /// <summary>
@@ -265,8 +295,9 @@ namespace iKalista
             }
 
             var rendTarget =
-                ObjectManager.Get<Obj_AI_Hero>().FirstOrDefault(
-                    x => x.IsEnemy && x.IsRendKillable() && x.IsValidTarget(SpellManager.Spell[SpellSlot.E].Range));
+                ObjectManager.Get<Obj_AI_Hero>()
+                    .FirstOrDefault(
+                        x => x.IsEnemy && x.IsRendKillable() && x.IsValidTarget(SpellManager.Spell[SpellSlot.E].Range));
 
             if (rendTarget != null)
             {
@@ -283,24 +314,6 @@ namespace iKalista
             this.JungleSteal();
             this.AutoSentinel();
             this.ProcessKillsteal();
-        }
-
-        /// <summary>
-        ///     Auto Harass Function
-        /// </summary>
-        private void AutoHarass()
-        {
-            if (!this.Menu["com.kalista.harass"]["autoHarass"].GetValue<MenuBool>().Value || !SpellManager.Spell[SpellSlot.E].IsReady())
-            {
-                return;
-            }
-
-            var target = ObjectManager.Get<Obj_AI_Hero>().Where(x => x.IsEnemy && x.HasRendBuff()).MinOrDefault(x => x.Distance(ObjectManager.Player));
-            var killableMinion = ObjectManager.Get<Obj_AI_Base>().Any(x => x.IsEnemy && SpellManager.Spell[SpellSlot.E].IsInRange(x) && x.IsRendKillable());
-            if (target != null && target.Distance(ObjectManager.Player) < Math.Pow(SpellManager.Spell[SpellSlot.E].Range + 200, 2) && killableMinion)
-            {
-                SpellManager.Spell[SpellSlot.E].Cast();
-            }
         }
 
         #endregion
