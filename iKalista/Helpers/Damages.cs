@@ -118,8 +118,7 @@ namespace iKalista.Helpers
         public static float GetRendDamage(Obj_AI_Base target, int customStacks = -1)
         {
             // Calculate the damage and return
-            return ((float)Player.CalculateDamage(target, DamageType.Physical, GetRawRendDamage(target, customStacks))
-                    - 20) * 0.98f;
+            return (float)Player.CalculateDamage(target, DamageType.Physical, GetRawRendDamage(target, customStacks));
         }
 
         /// <summary>

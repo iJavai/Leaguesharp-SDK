@@ -53,24 +53,24 @@ namespace iKalista.Helpers
 
             var comboMenu = new Menu("com.kalista.combo", "Combo Options");
             {
-                comboMenu.Add(new MenuSeparator("sep", "Combo"));
+                comboMenu.Add(new MenuSeparator("sep111", "Combo"));
                 comboMenu.Add(new MenuBool("useQ", "Use Q", true));
                 comboMenu.Add(new MenuBool("useE", "Use E", true));
 
-                comboMenu.Add(new MenuSeparator("sep-", "Auto E"));
+                comboMenu.Add(new MenuSeparator("sep11", "Auto E"));
                 comboMenu.Add(new MenuBool("autoE", "Auto E"));
                 comboMenu.Add(new MenuSlider("minStacks", "Min Percent for Auto E", 100, 10));
 
-                comboMenu.Add(new MenuSeparator("sep1", "E Leaving"));
+                comboMenu.Add(new MenuSeparator("sep123", "E Leaving"));
                 comboMenu.Add(new MenuBool("useELeaving", "E Leaving target"));
                 comboMenu.Add(new MenuSlider("eLeavePercent", "Min Percent for Leaving", 40, 10));
 
-                comboMenu.Add(new MenuSeparator("sep2", "E Before Death"));
+                comboMenu.Add(new MenuSeparator("sep231", "E Before Death"));
                 comboMenu.Add(new MenuBool("eDeath", "E Before Death"));
                 comboMenu.Add(new MenuSlider("eDeathPercent", "Damage Percent Before Death", 20, 10));
                 comboMenu.Add(new MenuSlider("myHealthPercent", "My Health Percent Before Death", 15, 5, 50));
 
-                comboMenu.Add(new MenuSeparator("sep3", "Ultimate Options"));
+                comboMenu.Add(new MenuSeparator("sep321", "Ultimate Options"));
                 comboMenu.Add(new MenuBool("saveAlly", "Save Ally With Ultimate"));
                 comboMenu.Add(new MenuSlider("allyHealth", "Min Ally Health to save", 15, 10));
                 RootMenu.Add(comboMenu);
@@ -91,7 +91,7 @@ namespace iKalista.Helpers
                 laneclearMenu.Add(new MenuSlider("qClear", "Min Minions for Q", 3, 1, 10));
                 laneclearMenu.Add(new MenuSlider("qMana", "Min Mana for Q %", 50, 10));
 
-                laneclearMenu.Add(new MenuSeparator("sep", string.Empty));
+                laneclearMenu.Add(new MenuSeparator("sep3321", "-"));
 
                 laneclearMenu.Add(new MenuBool("useE", "Use E", true));
                 laneclearMenu.Add(new MenuSlider("eClear", "Min Minions for E", 3, 1, 10));
@@ -114,7 +114,7 @@ namespace iKalista.Helpers
             var fleeMenu = new Menu("com.kalista.flee", "Flee Options");
             {
                 fleeMenu.Add(new MenuKeyBind("fleeActive", "Flee Key", Keys.V, KeyBindType.Press));
-                fleeMenu.Add(new MenuSeparator("sep", string.Empty));
+                fleeMenu.Add(new MenuSeparator("sep", "-"));
                 fleeMenu.Add(new MenuBool("wallJump", "Try Wall Jump", true));
                 fleeMenu.Add(new MenuBool("aaFlee", "Use Auto Attacks", true));
                 RootMenu.Add(fleeMenu);

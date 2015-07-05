@@ -63,6 +63,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\Damages.cs" />
     <Compile Include="Helpers\Helper.cs" />
     <Compile Include="Helpers\MenuGenerator.cs" />
     <Compile Include="Kalista.cs" />

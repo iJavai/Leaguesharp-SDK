@@ -42,7 +42,7 @@ namespace iKalista.Helpers
         /// <returns>
         /// The <see cref="float"/>.
         /// </returns>
-        public static float GetHealthWithShield(this Obj_AI_Hero target)
+        public static float GetHealthWithShield(this Obj_AI_Base target)
         {
             var result = target.Health;
 
@@ -73,13 +73,13 @@ namespace iKalista.Helpers
         }
 
         /// <summary>
-        /// Gets the Rend Damage for each target
+        ///     Gets the Rend Damage for each target
         /// </summary>
         /// <param name="target">
-        /// The Target
+        ///     The Target
         /// </param>
         /// <returns>
-        /// The <see cref="float"/>.
+        ///     The <see cref="float"/>.
         /// </returns>
         public static float GetRendDamage(Obj_AI_Base target)
         {
@@ -148,47 +148,54 @@ namespace iKalista.Helpers
         }
 
         /// <summary>
-        /// Checks if the given target has an invulnerable buff
+        ///     Checks if the given target has an invulnerable buff
         /// </summary>
-        /// <param name="target">
-        /// The Target
+        /// <param name="target1">
+        ///     The Target
         /// </param>
         /// <returns>
-        /// The <see cref="bool"/>.
+        ///     The <see cref="bool"/>.
         /// </returns>
-        public static bool HasUndyingBuff(this Obj_AI_Hero target)
+        public static bool HasUndyingBuff(this Obj_AI_Base target1)
         {
-            // Tryndamere R
-            if (target.ChampionName == "Tryndamere"
-                && target.Buffs.Any(
-                    b => b.Caster.NetworkId == target.NetworkId && b.IsValid && b.DisplayName == "Undying Rage"))
-            {
-                return true;
-            }
+            var target = target1 as Obj_AI_Hero;
 
-            // Zilean R
-            if (target.Buffs.Any(b => b.IsValid && b.DisplayName == "Chrono Shift"))
+            if (target != null)
             {
-                return true;
-            }
 
-            // Kayle R
-            if (target.Buffs.Any(b => b.IsValid && b.DisplayName == "JudicatorIntervention"))
-            {
-                return true;
-            }
-
-            // Poppy R
-            if (target.ChampionName == "Poppy")
-            {
-                if (
-                    GameObjects.AllyHeroes.Any(
-                        o =>
-                        !o.IsMe
-                        && o.Buffs.Any(
-                            b => b.Caster.NetworkId == target.NetworkId && b.IsValid && b.DisplayName == "PoppyDITarget")))
+                // Tryndamere R
+                if (target.ChampionName == "Tryndamere"
+                    && target.Buffs.Any(
+                        b => b.Caster.NetworkId == target.NetworkId && b.IsValid && b.DisplayName == "Undying Rage"))
                 {
                     return true;
+                }
+
+                // Zilean R
+                if (target.Buffs.Any(b => b.IsValid && b.DisplayName == "Chrono Shift"))
+                {
+                    return true;
+                }
+
+                // Kayle R
+                if (target.Buffs.Any(b => b.IsValid && b.DisplayName == "JudicatorIntervention"))
+                {
+                    return true;
+                }
+
+                // Poppy R
+                if (target.ChampionName == "Poppy")
+                {
+                    if (
+                        GameObjects.AllyHeroes.Any(
+                            o =>
+                            !o.IsMe
+                            && o.Buffs.Any(
+                                b =>
+                                b.Caster.NetworkId == target.NetworkId && b.IsValid && b.DisplayName == "PoppyDITarget")))
+                    {
+                        return true;
+                    }
                 }
             }
 
@@ -196,20 +203,31 @@ namespace iKalista.Helpers
         }
 
         /// <summary>
-        /// Checks if the given target is killable
+        ///     Checks if the given target is killable
         /// </summary>
         /// <param name="target">
-        /// The Target
+        ///     The Target
+        /// </param>
+        /// <returns>
+        ///     The <see cref="bool"/>.
+        /// </returns>
+        public static bool IsRendKillable(this Obj_AI_Hero target)
+        {
+            return GetRendDamage(target) >= GetHealthWithShield(target) && !HasUndyingBuff(target);
+        }
+
+        /// <summary>
+        /// TODO The is mob killable.
+        /// </summary>
+        /// <param name="target">
+        /// TODO The target.
         /// </param>
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        public static bool IsRendKillable(this Obj_AI_Base target)
+        public static bool IsMobKillable(this Obj_AI_Minion target)
         {
-            return target is Obj_AI_Hero
-                       ? GetHealthWithShield((Obj_AI_Hero)target) <= GetRendDamage(target)
-                         && !HasUndyingBuff((Obj_AI_Hero)target)
-                       : target.Health <= GetRendDamage(target);
+            return GetRendDamage(target) >= target.Health;
         }
 
         #endregion

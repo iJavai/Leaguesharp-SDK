@@ -99,25 +99,7 @@ namespace iKalista
         /// </summary>
         private void AutoHarass()
         {
-            if (!this.Menu["com.kalista.harass"]["autoHarass"].GetValue<MenuBool>().Value
-                || !SpellManager.Spell[SpellSlot.E].IsReady())
-            {
-                return;
-            }
-
-            var target =
-                ObjectManager.Get<Obj_AI_Hero>()
-                    .Where(x => x.IsEnemy && x.HasRendBuff())
-                    .MinOrDefault(x => x.Distance(ObjectManager.Player));
-            var killableMinion =
-                ObjectManager.Get<Obj_AI_Base>()
-                    .Any(x => x.IsEnemy && SpellManager.Spell[SpellSlot.E].IsInRange(x) && x.IsRendKillable());
-            if (target != null
-                && target.Distance(ObjectManager.Player) < Math.Pow(SpellManager.Spell[SpellSlot.E].Range + 200, 2)
-                && killableMinion)
-            {
-                SpellManager.Spell[SpellSlot.E].Cast();
-            }
+            // TODO
         }
 
         /// <summary>
@@ -159,12 +141,12 @@ namespace iKalista
             var jungleMinion =
                 GameObjects.Jungle.FirstOrDefault(
                     x =>
-                    !x.Name.Contains("Mini") && x.IsRendKillable()
+                    !x.Name.Contains("Mini") && x.IsMobKillable()
                     && x.IsValidTarget(SpellManager.Spell[SpellSlot.E].Range));
             var siegeMinion =
                 GameObjects.EnemyMinions.FirstOrDefault(
                     x =>
-                    (x.SkinName.Contains("siege") || x.SkinName.Contains("super")) && x.IsRendKillable()
+                    (x.SkinName.Contains("siege") || x.SkinName.Contains("super")) && x.IsMobKillable()
                     && x.IsValidTarget(SpellManager.Spell[SpellSlot.E].Range));
 
             switch (this.Menu["com.kalista.misc"]["stealMode"].GetValue<MenuList<string>>().Index)
@@ -223,7 +205,7 @@ namespace iKalista
                     ObjectManager.Get<Obj_AI_Hero>()
                         .Where(
                             x =>
-                            x.IsEnemy && x.IsValidTarget(SpellManager.Spell[SpellSlot.E].Range) && x.HasRendBuff()
+                            x.IsEnemy && x.IsValidTarget(950) && x.HasRendBuff()
                             && !x.HasBuffOfType(BuffType.Invulnerability) && !x.HasBuffOfType(BuffType.SpellShield))
                         .OrderByDescending(Helper.GetRendDamage)
                         .FirstOrDefault();
@@ -233,20 +215,9 @@ namespace iKalista
                     return;
                 }
 
-                var damage = Math.Ceiling(Helper.GetRendDamage(rendTarget) * 0x64 / rendTarget.Health);
-
-                if (this.Menu["com.kalista.combo"]["useELeaving"].GetValue<MenuBool>().Value
-                    && rendTarget.ServerPosition.Distance(ObjectManager.Player.ServerPosition)
-                    > Math.Pow(SpellManager.Spell[SpellSlot.E].Range * 0.8, 2)
-                    && !rendTarget.IsFacing(ObjectManager.Player)
-                    && damage >= this.Menu["com.kalista.combo"]["eLeavePercent"].GetValue<MenuSlider>().Value)
+                if (rendTarget.IsRendKillable())
                 {
-                    SpellManager.Spell[SpellSlot.E].Cast();
-                }
-
-                if (rendTarget.IsRendKillable()
-                    || damage >= this.Menu["com.kalista.combo"]["minStacks"].GetValue<MenuSlider>().Value)
-                {
+                    Console.WriteLine("Killable: " + rendTarget.IsRendKillable());
                     SpellManager.Spell[SpellSlot.E].Cast();
                 }
             }
@@ -310,9 +281,10 @@ namespace iKalista
         /// </summary>
         private void UpdateFunctions()
         {
-            this.AutoHarass();
+            // this.AutoHarass();
             this.JungleSteal();
             this.AutoSentinel();
+
             this.ProcessKillsteal();
         }
 
