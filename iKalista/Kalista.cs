@@ -1,25 +1,11 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="Kalista.cs" company="LeagueSharp">
-//   Copyright (C) 2015 LeagueSharp
+// <copyright file="Kalista.cs" company="">
 //   
-//             This program is free software: you can redistribute it and/or modify
-//             it under the terms of the GNU General Public License as published by
-//             the Free Software Foundation, either version 3 of the License, or
-//             (at your option) any later version.
-//   
-//             This program is distributed in the hope that it will be useful,
-//             but WITHOUT ANY WARRANTY; without even the implied warranty of
-//             MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//             GNU General Public License for more details.
-//   
-//             You should have received a copy of the GNU General Public License
-//             along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // <summary>
 //   The champion class
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace iKalista
 {
     using System;
@@ -32,7 +18,7 @@ namespace iKalista
     using LeagueSharp.SDK.Core.Enumerations;
     using LeagueSharp.SDK.Core.Events;
     using LeagueSharp.SDK.Core.Extensions;
-    using LeagueSharp.SDK.Core.Extensions.SharpDX;
+    using LeagueSharp.SDK.Core.Signals;
     using LeagueSharp.SDK.Core.UI.IMenu;
     using LeagueSharp.SDK.Core.UI.IMenu.Values;
     using LeagueSharp.SDK.Core.Utils;
@@ -93,14 +79,6 @@ namespace iKalista
         #endregion
 
         #region Methods
-
-        /// <summary>
-        ///     Auto Harass Function
-        /// </summary>
-        private void AutoHarass()
-        {
-            // TODO
-        }
 
         /// <summary>
         ///     Sends sentinels to either dragon or baron pit!
@@ -231,6 +209,14 @@ namespace iKalista
         }
 
         /// <summary>
+        ///     The lane clearing function
+        /// </summary>
+        private void OnLaneclear()
+        {
+            // TODO
+        }
+
+        /// <summary>
         ///     The update function
         /// </summary>
         /// <param name="args">
@@ -246,6 +232,9 @@ namespace iKalista
                 case OrbwalkerMode.Hybrid:
                     this.OnHarass();
                     break;
+                case OrbwalkerMode.LaneClear:
+                    this.OnLaneclear();
+                    break;
             }
 
             if (this.Menu["com.kalista.flee"]["fleeActive"].GetValue<MenuKeyBind>().Active)
@@ -256,36 +245,12 @@ namespace iKalista
         }
 
         /// <summary>
-        ///     Process the kill steal
-        /// </summary>
-        private void ProcessKillsteal()
-        {
-            if (!SpellManager.Spell[SpellSlot.E].IsReady())
-            {
-                return;
-            }
-
-            var rendTarget =
-                ObjectManager.Get<Obj_AI_Hero>()
-                    .FirstOrDefault(
-                        x => x.IsEnemy && x.IsRendKillable() && x.IsValidTarget(SpellManager.Spell[SpellSlot.E].Range));
-
-            if (rendTarget != null)
-            {
-                SpellManager.Spell[SpellSlot.E].Cast();
-            }
-        }
-
-        /// <summary>
         ///     The things we always want to process
         /// </summary>
         private void UpdateFunctions()
         {
-            // this.AutoHarass();
             this.JungleSteal();
             this.AutoSentinel();
-
-            this.ProcessKillsteal();
         }
 
         #endregion
