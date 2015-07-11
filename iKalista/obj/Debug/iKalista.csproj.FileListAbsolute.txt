@@ -1,1 +1,1 @@
-C:\Users\Corey\Desktop\iKalista\bin\Release\iKalista.exe.config
+C:\Users\Corey\Documents\Leaguesharp-SDK\iKalista\bin\Release\iKalista.exe.config

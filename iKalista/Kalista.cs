@@ -18,7 +18,7 @@ namespace iKalista
     using LeagueSharp.SDK.Core.Enumerations;
     using LeagueSharp.SDK.Core.Events;
     using LeagueSharp.SDK.Core.Extensions;
-    using LeagueSharp.SDK.Core.Signals;
+    using LeagueSharp.SDK.Core.Extensions.SharpDX;
     using LeagueSharp.SDK.Core.UI.IMenu;
     using LeagueSharp.SDK.Core.UI.IMenu.Values;
     using LeagueSharp.SDK.Core.Utils;
@@ -59,6 +59,46 @@ namespace iKalista
                         DelayAction.Add(0x7D, Orbwalker.ResetAutoAttackTimer);
                     }
                 };
+            Drawing.OnDraw += this.OnDraw;
+        }
+
+        /// <summary>
+        ///     The Drawing Function
+        /// </summary>
+        /// <param name="args">
+        ///     The Arguments
+        /// </param>
+        private void OnDraw(EventArgs args)
+        {
+            if (this.Menu["com.kalista.drawing"]["drawQ"].GetValue<MenuBool>().Value)
+            {
+                Drawing.DrawCircle(ObjectManager.Player.Position, SpellManager.Spell[SpellSlot.Q].Range, System.Drawing.Color.Crimson);
+            }
+
+            if (this.Menu["com.kalista.drawing"]["drawE"].GetValue<MenuBool>().Value)
+            {
+                Drawing.DrawCircle(ObjectManager.Player.Position, SpellManager.Spell[SpellSlot.E].Range, System.Drawing.Color.Crimson);
+            }
+
+            if (this.Menu["com.kalista.drawing"]["drawELeaving"].GetValue<MenuBool>().Value)
+            {
+                Drawing.DrawCircle(ObjectManager.Player.Position, SpellManager.Spell[SpellSlot.E].Range - 200, System.Drawing.Color.Crimson);
+            }
+
+            if (this.Menu["com.kalista.drawing"]["drawPercentage"].GetValue<MenuBool>().Value)
+            {
+                foreach (var source in
+                            GameObjects.EnemyHeroes.Where(x => ObjectManager.Player.Distance(x) <= 2000f && !x.IsDead))
+                {
+                    var currentPercentage = Helper.GetRendDamage(source) * 100 / source.GetHealthWithShield();
+
+                    Drawing.DrawText(
+                        Drawing.WorldToScreen(source.Position)[0],
+                        Drawing.WorldToScreen(source.Position)[1],
+                        currentPercentage >= 100 ? System.Drawing.Color.DarkRed : System.Drawing.Color.White,
+                        currentPercentage >= 100 ? "Killable With E" : "Current Damage: " + currentPercentage + "%");
+                }
+            }
         }
 
         #endregion
@@ -193,6 +233,21 @@ namespace iKalista
                     return;
                 }
 
+                var damage = Math.Ceiling(Helper.GetRendDamage(rendTarget) * 100 / rendTarget.GetHealthWithShield());
+
+                if (this.Menu["com.kalista.combo"]["useELeaving"].GetValue<MenuBool>().Value && damage >= this.Menu["com.kalista.combo"]["eLeavePercent"].GetValue<MenuSlider>().Value
+                    && rendTarget.HealthPercent > 20
+                    && rendTarget.ServerPosition.Distance(ObjectManager.Player.ServerPosition)
+                    > Math.Pow(SpellManager.Spell[SpellSlot.E].Range * 0.8, 2) && !rendTarget.IsFacing(ObjectManager.Player))
+                {
+                    SpellManager.Spell[SpellSlot.E].Cast();
+                }
+
+                if (this.Menu["com.kalista.combo"]["autoE"].GetValue<MenuBool>().Value && damage >= this.Menu["com.kalista.combo"]["minStacks"].GetValue<MenuSlider>().Value)
+                {
+                    SpellManager.Spell[SpellSlot.E].Cast();
+                }
+
                 if (rendTarget.IsRendKillable())
                 {
                     Console.WriteLine("Killable: " + rendTarget.IsRendKillable());
@@ -202,10 +257,54 @@ namespace iKalista
         }
 
         /// <summary>
+        ///     On Flee Function
+        /// </summary>
+        private void OnFlee()
+        {
+            // TODO
+        }
+
+        /// <summary>
         ///     The Harass Function
         /// </summary>
         private void OnHarass()
         {
+            if (SpellManager.Spell[SpellSlot.Q].IsReady()
+                && this.Menu["com.kalista.harass"]["useQ"].GetValue<MenuBool>().Value)
+            {
+                var target = TargetSelector.GetTarget(SpellManager.Spell[SpellSlot.Q].Range);
+
+                if (!ObjectManager.Player.IsWindingUp && !ObjectManager.Player.IsDashing())
+                {
+                    SpellManager.Spell[SpellSlot.Q].CastIfHitchanceMinimum(target, HitChance.Medium);
+                }
+            }
+
+            if (SpellManager.Spell[SpellSlot.E].IsReady()
+                && this.Menu["com.kalista.harass"]["useE"].GetValue<MenuBool>().Value)
+            {
+                var rendTarget =
+                    ObjectManager.Get<Obj_AI_Hero>()
+                        .Where(
+                            x =>
+                            x.IsEnemy && x.IsValidTarget(950) && x.HasRendBuff()
+                            && !x.HasBuffOfType(BuffType.Invulnerability) && !x.HasBuffOfType(BuffType.SpellShield))
+                        .OrderByDescending(Helper.GetRendDamage)
+                        .FirstOrDefault();
+
+                if (rendTarget == null)
+                {
+                    return;
+                }
+
+                var currentPercentDamage = Math.Ceiling(Helper.GetRendDamage(rendTarget) * 100 / rendTarget.Health);
+
+                if (rendTarget.IsRendKillable()
+                    || currentPercentDamage >= this.Menu["com.kalista.harass"]["minStacks"].GetValue<MenuSlider>().Value)
+                {
+                    SpellManager.Spell[SpellSlot.E].Cast();
+                }
+            }
         }
 
         /// <summary>
@@ -213,7 +312,68 @@ namespace iKalista
         /// </summary>
         private void OnLaneclear()
         {
-            // TODO
+            if (this.Menu["com.kalista.laneclear"]["useQ"].GetValue<MenuBool>().Value)
+            {
+                var currentMana = ObjectManager.Player.Mana / ObjectManager.Player.MaxMana * 100;
+                if (currentMana < this.Menu["com.kalista.laneclear"]["qMana"].GetValue<MenuSlider>().Value)
+                {
+                    return;
+                }
+
+                var minions =
+                    GameObjects.EnemyMinions.Where(
+                        x => ObjectManager.Player.Distance(x) <= SpellManager.Spell[SpellSlot.Q].Range && x.IsValid)
+                        .ToList();
+                if (minions.Count < 0)
+                {
+                    return;
+                }
+
+                foreach (
+                    var minion in minions.Where(x => x.Health <= ObjectManager.Player.GetSpellDamage(x, SpellSlot.Q)))
+                {
+                    var killableMinions =
+                        Helper.GetCollisionMinions(
+                            ObjectManager.Player, 
+                            ObjectManager.Player.ServerPosition.Extend(
+                                minion.ServerPosition, 
+                                SpellManager.Spell[SpellSlot.Q].Range))
+                            .Count(
+                                collisionMinion =>
+                                collisionMinion.Health
+                                <= ObjectManager.Player.GetSpellDamage(collisionMinion, SpellSlot.Q));
+
+                    if (killableMinions >= this.Menu["com.kalista.laneclear"]["qClear"].GetValue<MenuSlider>().Value
+                        && !ObjectManager.Player.IsWindingUp)
+                    {
+                        SpellManager.Spell[SpellSlot.Q].Cast(minion.ServerPosition);
+                    }
+                }
+            }
+
+            if (this.Menu["com.kalista.laneclear"]["useE"].GetValue<MenuBool>().Value)
+            {
+                var currentMana = ObjectManager.Player.Mana / ObjectManager.Player.MaxMana * 100;
+                if (currentMana < this.Menu["com.kalista.laneclear"]["eMana"].GetValue<MenuSlider>().Value)
+                {
+                    return;
+                }
+
+                var minions =
+                    GameObjects.EnemyMinions.Where(
+                        x => ObjectManager.Player.Distance(x) <= SpellManager.Spell[SpellSlot.E].Range && x.IsValid)
+                        .ToList();
+
+                var killableMinions =
+                    minions.Count(
+                        x => SpellManager.Spell[SpellSlot.E].CanCast(x) && x.Health <= Helper.GetRendDamage(x));
+
+                if (killableMinions >= this.Menu["com.kalista.laneclear"]["eClear"].GetValue<MenuSlider>().Value
+                    && !ObjectManager.Player.IsWindingUp)
+                {
+                    SpellManager.Spell[SpellSlot.E].Cast();
+                }
+            }
         }
 
         /// <summary>
@@ -239,9 +399,31 @@ namespace iKalista
 
             if (this.Menu["com.kalista.flee"]["fleeActive"].GetValue<MenuKeyBind>().Active)
             {
+                this.OnFlee();
             }
 
             this.UpdateFunctions();
+        }
+
+        /// <summary>
+        ///     Process the kill steal
+        /// </summary>
+        private void ProcessKillsteal()
+        {
+            if (!SpellManager.Spell[SpellSlot.E].IsReady())
+            {
+                return;
+            }
+
+            var rendTarget =
+                ObjectManager.Get<Obj_AI_Hero>()
+                    .FirstOrDefault(
+                        x => x.IsEnemy && x.IsRendKillable() && x.IsValidTarget(SpellManager.Spell[SpellSlot.E].Range));
+
+            if (rendTarget != null)
+            {
+                SpellManager.Spell[SpellSlot.E].Cast();
+            }
         }
 
         /// <summary>
@@ -249,6 +431,7 @@ namespace iKalista
         /// </summary>
         private void UpdateFunctions()
         {
+            this.ProcessKillsteal();
             this.JungleSteal();
             this.AutoSentinel();
         }

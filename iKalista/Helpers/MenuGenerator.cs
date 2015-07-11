@@ -124,6 +124,8 @@ namespace iKalista.Helpers
             {
                 drawingMenu.Add(new MenuBool("drawQ", "Draw Q Range"));
                 drawingMenu.Add(new MenuBool("drawE", "Draw E Range"));
+                drawingMenu.Add(new MenuBool("drawELeaving", "Draw E Range Leaving"));
+                drawingMenu.Add(new MenuBool("drawPercentage", "Draw E Damage Percentage"));
                 RootMenu.Add(drawingMenu);
             }
 

@@ -1,30 +1,26 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="Helper.cs" company="LeagueSharp">
-//   Copyright (C) 2015 LeagueSharp
+// <copyright file="Helper.cs" company="">
 //   
-//             This program is free software: you can redistribute it and/or modify
-//             it under the terms of the GNU General Public License as published by
-//             the Free Software Foundation, either version 3 of the License, or
-//             (at your option) any later version.
-//   
-//             This program is distributed in the hope that it will be useful,
-//             but WITHOUT ANY WARRANTY; without even the implied warranty of
-//             MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//             GNU General Public License for more details.
-//   
-//             You should have received a copy of the GNU General Public License
-//             along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
+// <summary>
+//   The Helper class
+// </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace iKalista.Helpers
 {
+    using System.Collections.Generic;
     using System.Linq;
 
     using LeagueSharp;
     using LeagueSharp.SDK.Core;
+    using LeagueSharp.SDK.Core.Enumerations;
     using LeagueSharp.SDK.Core.Extensions;
+    using LeagueSharp.SDK.Core.Math.Prediction;
     using LeagueSharp.SDK.Core.Wrappers;
+
+    using SharpDX;
+
+    using Collision = LeagueSharp.SDK.Core.Math.Collision;
 
     /// <summary>
     ///     The Helper class
@@ -34,13 +30,41 @@ namespace iKalista.Helpers
         #region Public Methods and Operators
 
         /// <summary>
-        /// Gets the targets current health including shield damage
+        ///     Gets the list of minions currently between the source and target
         /// </summary>
-        /// <param name="target">
-        /// The Target 
+        /// <param name="source">
+        ///     The Source
+        /// </param>
+        /// <param name="targetPosition">
+        ///     The Target Position
         /// </param>
         /// <returns>
-        /// The <see cref="float"/>.
+        ///     The <see cref="List" />.
+        /// </returns>
+        public static List<Obj_AI_Base> GetCollisionMinions(Obj_AI_Hero source, Vector3 targetPosition)
+        {
+            var input = new PredictionInput
+                            {
+                                Unit = source, Radius = SpellManager.Spell[SpellSlot.Q].Width, 
+                                Delay = SpellManager.Spell[SpellSlot.Q].Delay, 
+                                Speed = SpellManager.Spell[SpellSlot.Q].Speed, 
+                                CollisionObjects = CollisionableObjects.Minions
+                            };
+
+            return
+                Collision.GetCollision(new List<Vector3> { targetPosition }, input)
+                    .OrderBy(x => x.Distance(source))
+                    .ToList();
+        }
+
+        /// <summary>
+        ///     Gets the targets current health including shield damage
+        /// </summary>
+        /// <param name="target">
+        ///     The Target
+        /// </param>
+        /// <returns>
+        ///     The <see cref="float" />.
         /// </returns>
         public static float GetHealthWithShield(this Obj_AI_Base target)
         {
@@ -59,13 +83,27 @@ namespace iKalista.Helpers
         }
 
         /// <summary>
-        /// Gets the current <see cref="BuffInstance"/> Count of Expunge
+        ///     Gets the rend buff
         /// </summary>
         /// <param name="target">
-        /// The Target
+        ///     The Target
         /// </param>
         /// <returns>
-        /// The <see cref="int"/>.
+        ///     The <see cref="BuffInstance" />.
+        /// </returns>
+        public static BuffInstance GetRendBuff(this Obj_AI_Base target)
+        {
+            return target.Buffs.Find(b => b.Caster.IsMe && b.IsValid && b.DisplayName == "KalistaExpungeMarker");
+        }
+
+        /// <summary>
+        ///     Gets the current <see cref="BuffInstance" /> Count of Expunge
+        /// </summary>
+        /// <param name="target">
+        ///     The Target
+        /// </param>
+        /// <returns>
+        ///     The <see cref="int" />.
         /// </returns>
         public static int GetRendBuffCount(this Obj_AI_Base target)
         {
@@ -79,7 +117,7 @@ namespace iKalista.Helpers
         ///     The Target
         /// </param>
         /// <returns>
-        ///     The <see cref="float"/>.
+        ///     The <see cref="float" />.
         /// </returns>
         public static float GetRendDamage(Obj_AI_Base target)
         {
@@ -120,27 +158,13 @@ namespace iKalista.Helpers
         }
 
         /// <summary>
-        /// Gets the rend buff
+        ///     Checks if a target has the Expunge <see cref="BuffInstance" />
         /// </summary>
         /// <param name="target">
-        /// The Target
+        ///     The Target
         /// </param>
         /// <returns>
-        /// The <see cref="BuffInstance"/>.
-        /// </returns>
-        public static BuffInstance GetRendBuff(this Obj_AI_Base target)
-        {
-            return target.Buffs.Find(b => b.Caster.IsMe && b.IsValid && b.DisplayName == "KalistaExpungeMarker");
-        }
-
-        /// <summary>
-        /// Checks if a target has the Expunge <see cref="BuffInstance"/>
-        /// </summary>
-        /// <param name="target">
-        /// The Target
-        /// </param>
-        /// <returns>
-        /// The <see cref="bool"/>.
+        ///     The <see cref="bool" />.
         /// </returns>
         public static bool HasRendBuff(this Obj_AI_Base target)
         {
@@ -154,7 +178,7 @@ namespace iKalista.Helpers
         ///     The Target
         /// </param>
         /// <returns>
-        ///     The <see cref="bool"/>.
+        ///     The <see cref="bool" />.
         /// </returns>
         public static bool HasUndyingBuff(this Obj_AI_Base target1)
         {
@@ -162,7 +186,6 @@ namespace iKalista.Helpers
 
             if (target != null)
             {
-
                 // Tryndamere R
                 if (target.ChampionName == "Tryndamere"
                     && target.Buffs.Any(
@@ -203,31 +226,31 @@ namespace iKalista.Helpers
         }
 
         /// <summary>
+        ///     TODO The is mob killable.
+        /// </summary>
+        /// <param name="target">
+        ///     TODO The target.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="bool" />.
+        /// </returns>
+        public static bool IsMobKillable(this Obj_AI_Minion target)
+        {
+            return GetRendDamage(target) >= target.Health;
+        }
+
+        /// <summary>
         ///     Checks if the given target is killable
         /// </summary>
         /// <param name="target">
         ///     The Target
         /// </param>
         /// <returns>
-        ///     The <see cref="bool"/>.
+        ///     The <see cref="bool" />.
         /// </returns>
         public static bool IsRendKillable(this Obj_AI_Hero target)
         {
             return GetRendDamage(target) >= GetHealthWithShield(target) && !HasUndyingBuff(target);
-        }
-
-        /// <summary>
-        /// TODO The is mob killable.
-        /// </summary>
-        /// <param name="target">
-        /// TODO The target.
-        /// </param>
-        /// <returns>
-        /// The <see cref="bool"/>.
-        /// </returns>
-        public static bool IsMobKillable(this Obj_AI_Minion target)
-        {
-            return GetRendDamage(target) >= target.Health;
         }
 
         #endregion
@@ -235,13 +258,13 @@ namespace iKalista.Helpers
         #region Methods
 
         /// <summary>
-        /// Gets the Base Damage
+        ///     Gets the Base Damage
         /// </summary>
         /// <param name="target">
-        /// The target
+        ///     The target
         /// </param>
         /// <returns>
-        /// The <see cref="float"/>.
+        ///     The <see cref="float" />.
         /// </returns>
         private static float GetBaseDamage(Obj_AI_Base target)
         {
