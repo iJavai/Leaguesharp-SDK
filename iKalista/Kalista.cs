@@ -97,8 +97,8 @@ namespace iKalista
             Notifications.Add(
                 new Notification(
                     "iKalista 2.0 - Even Better Then Before", 
-                    "Please Note this is currently a work in progress assembly"
-                    + "Please leave any feedback / suggestion in the thread"));
+                    "Please Note this is currently a work in progress assembly\n"
+                    + "Please leave any feedback / suggestion in the thread\n" + "Made by Corey, Protected under Australian IP Laws"));
         }
 
         #endregion
