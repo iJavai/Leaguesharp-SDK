@@ -58,7 +58,7 @@ namespace iKalista
                                                            {
                                                                new KillstealModule(), new AutoEModule(), 
                                                                new AutoHarassModule(), new LeavingModule(), 
-                                                               new MobStealModule()
+                                                               new MobStealModule(), new FleeModule()
                                                            };
 
         #endregion

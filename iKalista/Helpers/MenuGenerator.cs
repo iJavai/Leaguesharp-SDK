@@ -21,7 +21,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace iKalista.Helpers
 {
-    using System.Linq;
     using System.Windows.Forms;
 
     using LeagueSharp.SDK.Core.Enumerations;

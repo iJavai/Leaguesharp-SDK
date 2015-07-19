@@ -67,9 +67,11 @@
     <Compile Include="Helpers\Damages.cs" />
     <Compile Include="Helpers\Helper.cs" />
     <Compile Include="Helpers\MenuGenerator.cs" />
+    <Compile Include="Helpers\VectorHelper.cs" />
     <Compile Include="Kalista.cs" />
     <Compile Include="Modules\AutoEModule.cs" />
     <Compile Include="Modules\AutoHarassModule.cs" />
+    <Compile Include="Modules\FleeModule.cs" />
     <Compile Include="Modules\IModule.cs" />
     <Compile Include="Modules\KillstealModule.cs" />
     <Compile Include="Helpers\TickLimiter.cs" />
