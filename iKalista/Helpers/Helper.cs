@@ -1,6 +1,19 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="Helper.cs" company="">
+// <copyright file="Helper.cs" company="LeagueSharp">
+//   Copyright (C) 2015 LeagueSharp
 //   
+//             This program is free software: you can redistribute it and/or modify
+//             it under the terms of the GNU General Public License as published by
+//             the Free Software Foundation, either version 3 of the License, or
+//             (at your option) any later version.
+//   
+//             This program is distributed in the hope that it will be useful,
+//             but WITHOUT ANY WARRANTY; without even the implied warranty of
+//             MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//             GNU General Public License for more details.
+//   
+//             You should have received a copy of the GNU General Public License
+//             along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // <summary>
 //   The Helper class
@@ -68,18 +81,13 @@ namespace iKalista.Helpers
         /// </returns>
         public static float GetHealthWithShield(this Obj_AI_Base target)
         {
-            var result = target.Health;
+            /*var result = target.Health;
 
             if (target.AttackShield > 0)
             {
                 result += target.AttackShield;
-            }
-            else if (target.MagicShield > 0)
-            {
-                result += target.MagicShield;
-            }
-
-            return result;
+            }*/
+            return target.Health;
         }
 
         /// <summary>
@@ -93,7 +101,9 @@ namespace iKalista.Helpers
         /// </returns>
         public static BuffInstance GetRendBuff(this Obj_AI_Base target)
         {
-            return target.Buffs.Find(b => b.Caster.IsMe && b.IsValid && b.DisplayName == "KalistaExpungeMarker");
+            return
+                target.Buffs.Find(
+                    b => b.Caster.IsMe && b.IsValid && b.DisplayName.ToLowerInvariant() == "kalistaexpungemarker");
         }
 
         /// <summary>
@@ -107,7 +117,7 @@ namespace iKalista.Helpers
         /// </returns>
         public static int GetRendBuffCount(this Obj_AI_Base target)
         {
-            return target.GetBuffCount("kalistaexpungemarker");
+            return target.Buffs.Count(x => x.Name == "kalistaexpungemarker");
         }
 
         /// <summary>

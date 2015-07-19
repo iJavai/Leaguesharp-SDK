@@ -1,6 +1,19 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="Kalista.cs" company="">
+// <copyright file="Kalista.cs" company="LeagueSharp">
+//   Copyright (C) 2015 LeagueSharp
 //   
+//             This program is free software: you can redistribute it and/or modify
+//             it under the terms of the GNU General Public License as published by
+//             the Free Software Foundation, either version 3 of the License, or
+//             (at your option) any later version.
+//   
+//             This program is distributed in the hope that it will be useful,
+//             but WITHOUT ANY WARRANTY; without even the implied warranty of
+//             MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//             GNU General Public License for more details.
+//   
+//             You should have received a copy of the GNU General Public License
+//             along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // <summary>
 //   The champion class
@@ -9,9 +22,11 @@
 namespace iKalista
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
 
     using iKalista.Helpers;
+    using iKalista.Modules;
 
     using LeagueSharp;
     using LeagueSharp.SDK.Core;
@@ -21,16 +36,33 @@ namespace iKalista
     using LeagueSharp.SDK.Core.Extensions.SharpDX;
     using LeagueSharp.SDK.Core.UI.IMenu;
     using LeagueSharp.SDK.Core.UI.IMenu.Values;
+    using LeagueSharp.SDK.Core.UI.INotifications;
     using LeagueSharp.SDK.Core.Utils;
     using LeagueSharp.SDK.Core.Wrappers;
 
     using SharpDX;
+
+    using Color = System.Drawing.Color;
 
     /// <summary>
     ///     The champion class
     /// </summary>
     public class Kalista
     {
+        #region Static Fields
+
+        /// <summary>
+        ///     The Modules
+        /// </summary>
+        public static readonly List<IModule> Modules = new List<IModule>
+                                                           {
+                                                               new KillstealModule(), new AutoEModule(), 
+                                                               new AutoHarassModule(), new LeavingModule(), 
+                                                               new MobStealModule()
+                                                           };
+
+        #endregion
+
         #region Constructors and Destructors
 
         /// <summary>
@@ -40,6 +72,9 @@ namespace iKalista
         {
             MenuGenerator.Generate();
             Game.OnUpdate += this.OnUpdate;
+            Drawing.OnDraw += this.OnDraw;
+            TickLimiter.Add("ModulesLimiter", 250);
+            this.LoadModules();
             Spellbook.OnCastSpell += (sender, args) =>
                 {
                     if (sender.Owner.IsMe && args.Slot == SpellSlot.Q && ObjectManager.Player.IsDashing())
@@ -59,46 +94,11 @@ namespace iKalista
                         DelayAction.Add(0x7D, Orbwalker.ResetAutoAttackTimer);
                     }
                 };
-            Drawing.OnDraw += this.OnDraw;
-        }
-
-        /// <summary>
-        ///     The Drawing Function
-        /// </summary>
-        /// <param name="args">
-        ///     The Arguments
-        /// </param>
-        private void OnDraw(EventArgs args)
-        {
-            if (this.Menu["com.kalista.drawing"]["drawQ"].GetValue<MenuBool>().Value)
-            {
-                Drawing.DrawCircle(ObjectManager.Player.Position, SpellManager.Spell[SpellSlot.Q].Range, System.Drawing.Color.Crimson);
-            }
-
-            if (this.Menu["com.kalista.drawing"]["drawE"].GetValue<MenuBool>().Value)
-            {
-                Drawing.DrawCircle(ObjectManager.Player.Position, SpellManager.Spell[SpellSlot.E].Range, System.Drawing.Color.Crimson);
-            }
-
-            if (this.Menu["com.kalista.drawing"]["drawELeaving"].GetValue<MenuBool>().Value)
-            {
-                Drawing.DrawCircle(ObjectManager.Player.Position, SpellManager.Spell[SpellSlot.E].Range - 200, System.Drawing.Color.Crimson);
-            }
-
-            if (this.Menu["com.kalista.drawing"]["drawPercentage"].GetValue<MenuBool>().Value)
-            {
-                foreach (var source in
-                            GameObjects.EnemyHeroes.Where(x => ObjectManager.Player.Distance(x) <= 2000f && !x.IsDead))
-                {
-                    var currentPercentage = Helper.GetRendDamage(source) * 100 / source.GetHealthWithShield();
-
-                    Drawing.DrawText(
-                        Drawing.WorldToScreen(source.Position)[0],
-                        Drawing.WorldToScreen(source.Position)[1],
-                        currentPercentage >= 100 ? System.Drawing.Color.DarkRed : System.Drawing.Color.White,
-                        currentPercentage >= 100 ? "Killable With E" : "Current Damage: " + currentPercentage + "%");
-                }
-            }
+            Notifications.Add(
+                new Notification(
+                    "iKalista 2.0 - Even Better Then Before", 
+                    "Please Note this is currently a work in progress assembly"
+                    + "Please leave any feedback / suggestion in the thread"));
         }
 
         #endregion
@@ -147,52 +147,20 @@ namespace iKalista
         }
 
         /// <summary>
-        ///     Steals Jungle Mobs
+        ///     Loads all the modules
         /// </summary>
-        private void JungleSteal()
+        private void LoadModules()
         {
-            if (!SpellManager.Spell[SpellSlot.E].IsReady())
+            foreach (var module in Modules.Where(x => x.ShouldBeLoaded()))
             {
-                return;
-            }
-
-            var jungleMinion =
-                GameObjects.Jungle.FirstOrDefault(
-                    x =>
-                    !x.Name.Contains("Mini") && x.IsMobKillable()
-                    && x.IsValidTarget(SpellManager.Spell[SpellSlot.E].Range));
-            var siegeMinion =
-                GameObjects.EnemyMinions.FirstOrDefault(
-                    x =>
-                    (x.SkinName.Contains("siege") || x.SkinName.Contains("super")) && x.IsMobKillable()
-                    && x.IsValidTarget(SpellManager.Spell[SpellSlot.E].Range));
-
-            switch (this.Menu["com.kalista.misc"]["stealMode"].GetValue<MenuList<string>>().Index)
-            {
-                case 0: // Both
-
-                    if (jungleMinion != null || siegeMinion != null)
-                    {
-                        SpellManager.Spell[SpellSlot.E].Cast();
-                    }
-
-                    break;
-                case 1: // Jungle Minions
-
-                    if (jungleMinion != null)
-                    {
-                        SpellManager.Spell[SpellSlot.E].Cast();
-                    }
-
-                    break;
-                case 2: // siege minions
-
-                    if (siegeMinion != null)
-                    {
-                        SpellManager.Spell[SpellSlot.E].Cast();
-                    }
-
-                    break;
+                try
+                {
+                    module.OnLoad();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error loading module: " + module.GetModuleName() + " Exception: " + e);
+                }
             }
         }
 
@@ -215,43 +183,46 @@ namespace iKalista
                     }
                 }
             }
+        }
 
-            if (SpellManager.Spell[SpellSlot.E].IsReady()
-                && this.Menu["com.kalista.combo"]["useE"].GetValue<MenuBool>().Value)
+        /// <summary>
+        ///     The Drawing Function
+        /// </summary>
+        /// <param name="args">
+        ///     The Arguments
+        /// </param>
+        private void OnDraw(EventArgs args)
+        {
+            if (this.Menu["com.kalista.drawing"]["drawQ"].GetValue<MenuBool>().Value)
             {
-                var rendTarget =
-                    ObjectManager.Get<Obj_AI_Hero>()
-                        .Where(
-                            x =>
-                            x.IsEnemy && x.IsValidTarget(950) && x.HasRendBuff()
-                            && !x.HasBuffOfType(BuffType.Invulnerability) && !x.HasBuffOfType(BuffType.SpellShield))
-                        .OrderByDescending(Helper.GetRendDamage)
-                        .FirstOrDefault();
+                Drawing.DrawCircle(ObjectManager.Player.Position, SpellManager.Spell[SpellSlot.Q].Range, Color.Crimson);
+            }
 
-                if (rendTarget == null)
+            if (this.Menu["com.kalista.drawing"]["drawE"].GetValue<MenuBool>().Value)
+            {
+                Drawing.DrawCircle(ObjectManager.Player.Position, SpellManager.Spell[SpellSlot.E].Range, Color.Crimson);
+            }
+
+            if (this.Menu["com.kalista.drawing"]["drawELeaving"].GetValue<MenuBool>().Value)
+            {
+                Drawing.DrawCircle(
+                    ObjectManager.Player.Position, 
+                    SpellManager.Spell[SpellSlot.E].Range - 200, 
+                    Color.Crimson);
+            }
+
+            if (this.Menu["com.kalista.drawing"]["drawPercentage"].GetValue<MenuBool>().Value)
+            {
+                foreach (var source in
+                    GameObjects.EnemyHeroes.Where(x => ObjectManager.Player.Distance(x) <= 2000f && !x.IsDead))
                 {
-                    return;
-                }
+                    var currentPercentage = Helper.GetRendDamage(source) * 100 / source.GetHealthWithShield();
 
-                var damage = Math.Ceiling(Helper.GetRendDamage(rendTarget) * 100 / rendTarget.GetHealthWithShield());
-
-                if (this.Menu["com.kalista.combo"]["useELeaving"].GetValue<MenuBool>().Value && damage >= this.Menu["com.kalista.combo"]["eLeavePercent"].GetValue<MenuSlider>().Value
-                    && rendTarget.HealthPercent > 20
-                    && rendTarget.ServerPosition.Distance(ObjectManager.Player.ServerPosition)
-                    > Math.Pow(SpellManager.Spell[SpellSlot.E].Range * 0.8, 2) && !rendTarget.IsFacing(ObjectManager.Player))
-                {
-                    SpellManager.Spell[SpellSlot.E].Cast();
-                }
-
-                if (this.Menu["com.kalista.combo"]["autoE"].GetValue<MenuBool>().Value && damage >= this.Menu["com.kalista.combo"]["minStacks"].GetValue<MenuSlider>().Value)
-                {
-                    SpellManager.Spell[SpellSlot.E].Cast();
-                }
-
-                if (rendTarget.IsRendKillable())
-                {
-                    Console.WriteLine("Killable: " + rendTarget.IsRendKillable());
-                    SpellManager.Spell[SpellSlot.E].Cast();
+                    Drawing.DrawText(
+                        Drawing.WorldToScreen(source.Position)[0], 
+                        Drawing.WorldToScreen(source.Position)[1], 
+                        currentPercentage >= 100 ? Color.DarkRed : Color.White, 
+                        currentPercentage >= 100 ? "Killable With E" : "Current Damage: " + currentPercentage + "%");
                 }
             }
         }
@@ -384,6 +355,11 @@ namespace iKalista
         /// </param>
         private void OnUpdate(EventArgs args)
         {
+            if (!TickLimiter.CanTick("ModulesLimiter"))
+            {
+                return;
+            }
+
             switch (Orbwalker.ActiveMode)
             {
                 case OrbwalkerMode.Orbwalk:
@@ -403,26 +379,10 @@ namespace iKalista
             }
 
             this.UpdateFunctions();
-        }
 
-        /// <summary>
-        ///     Process the kill steal
-        /// </summary>
-        private void ProcessKillsteal()
-        {
-            if (!SpellManager.Spell[SpellSlot.E].IsReady())
+            foreach (var module in Modules.Where(x => x.ShouldRun()))
             {
-                return;
-            }
-
-            var rendTarget =
-                ObjectManager.Get<Obj_AI_Hero>()
-                    .FirstOrDefault(
-                        x => x.IsEnemy && x.IsRendKillable() && x.IsValidTarget(SpellManager.Spell[SpellSlot.E].Range));
-
-            if (rendTarget != null)
-            {
-                SpellManager.Spell[SpellSlot.E].Cast();
+                module.Run();
             }
         }
 
@@ -431,8 +391,6 @@ namespace iKalista
         /// </summary>
         private void UpdateFunctions()
         {
-            this.ProcessKillsteal();
-            this.JungleSteal();
             this.AutoSentinel();
         }
 

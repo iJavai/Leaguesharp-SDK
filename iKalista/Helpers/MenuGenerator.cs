@@ -21,6 +21,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace iKalista.Helpers
 {
+    using System.Linq;
     using System.Windows.Forms;
 
     using LeagueSharp.SDK.Core.Enumerations;
@@ -57,15 +58,15 @@ namespace iKalista.Helpers
                 comboMenu.Add(new MenuBool("useQ", "Use Q", true));
                 comboMenu.Add(new MenuBool("useE", "Use E", true));
 
-                comboMenu.Add(new MenuSeparator("sep11", "Auto E"));
+                comboMenu.Add(new MenuSeparator("sep11", "Auto E")); // Make Module
                 comboMenu.Add(new MenuBool("autoE", "Auto E"));
                 comboMenu.Add(new MenuSlider("minStacks", "Min Percent for Auto E", 100, 10));
 
                 comboMenu.Add(new MenuSeparator("sep123", "E Leaving"));
                 comboMenu.Add(new MenuBool("useELeaving", "E Leaving target"));
-                comboMenu.Add(new MenuSlider("eLeavePercent", "Min Percent for Leaving", 40, 10));
+                comboMenu.Add(new MenuSlider("eLeavePercent", "Min Percent for Leaving", 40, 10)); // Make Module
 
-                comboMenu.Add(new MenuSeparator("sep231", "E Before Death"));
+                comboMenu.Add(new MenuSeparator("sep231", "E Before Death")); // make module
                 comboMenu.Add(new MenuBool("eDeath", "E Before Death"));
                 comboMenu.Add(new MenuSlider("eDeathPercent", "Damage Percent Before Death", 20, 10));
                 comboMenu.Add(new MenuSlider("myHealthPercent", "My Health Percent Before Death", 15, 5, 50));
@@ -103,6 +104,7 @@ namespace iKalista.Helpers
             {
                 miscMenu.Add(new MenuKeyBind("sentinelDrake", "Send Sentinel to Dragon", Keys.T, KeyBindType.Press));
                 miscMenu.Add(new MenuKeyBind("sentinelBaron", "Send Sentinel to Baron", Keys.Y, KeyBindType.Press));
+                miscMenu.Add(new MenuBool("useJungleSteal", "Use Jungle Steal", true));
                 miscMenu.Add(
                     new MenuList<string>(
                         "stealMode", 

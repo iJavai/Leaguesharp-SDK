@@ -68,6 +68,13 @@
     <Compile Include="Helpers\Helper.cs" />
     <Compile Include="Helpers\MenuGenerator.cs" />
     <Compile Include="Kalista.cs" />
+    <Compile Include="Modules\AutoEModule.cs" />
+    <Compile Include="Modules\AutoHarassModule.cs" />
+    <Compile Include="Modules\IModule.cs" />
+    <Compile Include="Modules\KillstealModule.cs" />
+    <Compile Include="Helpers\TickLimiter.cs" />
+    <Compile Include="Modules\LeavingModule.cs" />
+    <Compile Include="Modules\MobStealModule.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Helpers\SpellManager.cs" />
