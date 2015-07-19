@@ -73,7 +73,7 @@ namespace iKalista
             MenuGenerator.Generate();
             Game.OnUpdate += this.OnUpdate;
             Drawing.OnDraw += this.OnDraw;
-            TickLimiter.Add("ModulesLimiter", 250);
+            TickLimiter.Add("ModulesLimiter", 0x7D);
             this.LoadModules();
             Spellbook.OnCastSpell += (sender, args) =>
                 {
@@ -214,7 +214,7 @@ namespace iKalista
             if (this.Menu["com.kalista.drawing"]["drawPercentage"].GetValue<MenuBool>().Value)
             {
                 foreach (var source in
-                    GameObjects.EnemyHeroes.Where(x => ObjectManager.Player.Distance(x) <= 2000f && !x.IsDead))
+                    GameObjects.EnemyHeroes.Where(x => !x.IsDead && x.Position.IsOnScreen()))
                 {
                     var currentPercentage = Helper.GetRendDamage(source) * 100 / source.GetHealthWithShield();
 
